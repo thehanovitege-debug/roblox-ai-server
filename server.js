@@ -1,16 +1,13 @@
 require("dotenv").config();
 const express = require("express");
-
 const app = express();
 app.use(express.json());
 app.use((req, res, next) => {
     res.setHeader("ngrok-skip-browser-warning", "true");
     next();
 });
-
 const ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
 const API_TOKEN = process.env.CF_API_TOKEN;
-
 app.post("/chat", async (req, res) => {
     const userMessage = req.body.message;
     if (!userMessage) {
@@ -34,14 +31,14 @@ app.post("/chat", async (req, res) => {
             }
         );
         const data = await response.json();
-        const reply = data.result.response;
+        console.log("Cloudflare response:", JSON.stringify(data));
+        const reply = data.result?.response || data.result?.generated_text || "返答できませんでした";
         res.json({ reply: reply });
     } catch (error) {
         console.error("詳細エラー:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
-
 app.listen(process.env.PORT || 3000, () => {
     console.log("サーバー起動中...");
 });
