@@ -1,6 +1,5 @@
 require("dotenv").config();
 const express = require("express");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 app.use(express.json());
@@ -9,8 +8,8 @@ app.use((req, res, next) => {
     next();
 });
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+const ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
+const API_TOKEN = process.env.CF_API_TOKEN;
 
 app.post("/chat", async (req, res) => {
     const userMessage = req.body.message;
@@ -18,8 +17,24 @@ app.post("/chat", async (req, res) => {
         return res.status(400).json({ error: "メッセージがありません" });
     }
     try {
-        const result = await model.generateContent(userMessage);
-        const reply = result.response.text();
+        const response = await fetch(
+            `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/ai/run/@cf/meta/llama-3.3-70b-instruct-fp8-fast`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${API_TOKEN}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    messages: [
+                        { role: "system", content: "あなたは親切なAIアシスタントです。常に日本語で答えてください。" },
+                        { role: "user", content: userMessage }
+                    ]
+                })
+            }
+        );
+        const data = await response.json();
+        const reply = data.result.response;
         res.json({ reply: reply });
     } catch (error) {
         console.error("詳細エラー:", error.message);
