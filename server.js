@@ -1,5 +1,6 @@
+require("dotenv").config();
 const express = require("express");
-const Groq = require("groq-sdk");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 app.use(express.json());
@@ -8,7 +9,8 @@ app.use((req, res, next) => {
     next();
 });
 
-const groq = new Groq({ apiKey: "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" });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 app.post("/chat", async (req, res) => {
     const userMessage = req.body.message;
@@ -16,11 +18,8 @@ app.post("/chat", async (req, res) => {
         return res.status(400).json({ error: "メッセージがありません" });
     }
     try {
-        const completion = await groq.chat.completions.create({
-            messages: [{ role: "user", content: userMessage }],
-            model: "llama-3.3-70b-versatile",
-        });
-        const reply = completion.choices[0].message.content;
+        const result = await model.generateContent(userMessage);
+        const reply = result.response.text();
         res.json({ reply: reply });
     } catch (error) {
         console.error("詳細エラー:", error.message);
@@ -28,6 +27,6 @@ app.post("/chat", async (req, res) => {
     }
 });
 
-app.listen(3000, () => {
-    console.log("サーバー起動中... ポート3000");
+app.listen(process.env.PORT || 3000, () => {
+    console.log("サーバー起動中...");
 });
