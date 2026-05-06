@@ -6,7 +6,7 @@ app.use((req, res, next) => {
     next();
 });
 const ACCOUNT_ID = "3ba48054d4048b6e2126c61bfff671e9";
-const API_TOKEN = process.env.CF_API_TOKEN;
+const API_TOKEN = "cfut_jUvKitfeKymVVMG9G8FmULBvEQHshvrcaViv3P0e96971cac";
 app.post("/chat", async (req, res) => {
     const userMessage = req.body.message;
     if (!userMessage) {
